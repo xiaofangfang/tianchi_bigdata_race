@@ -140,7 +140,7 @@ public class CountAllBolt implements IRichBolt {
 			key = RaceConfig.prex_tmall + RaceConfig.teamcode + timestamp;
 		else
 			key = RaceConfig.prex_taobao + RaceConfig.teamcode + timestamp;
-		RaceUtils.method1_WriteText(key + ":" + str);
+		//RaceUtils.method1_WriteText(key + ":" + str);
 		return tairOperator.write(key, str);
 
 	}

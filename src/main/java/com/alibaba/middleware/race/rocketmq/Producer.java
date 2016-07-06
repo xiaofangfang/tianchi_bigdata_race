@@ -23,7 +23,7 @@ import com.alibaba.rocketmq.common.message.Message;
 public class Producer {
 
 	private static Random rand = new Random();
-	private static int count = 300;
+	private static int count = 30000;
 
 	/**
 	 * 这是一个模拟堆积消息的程序，生成的消息模型和我们比赛的消息模型是一样的， 所以选手可以利用这个程序生成数据，做线下的测试。
@@ -64,7 +64,7 @@ public class Producer {
 
 		for (int i = 0; i < count; i++) {
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(50);
 				final int platform = rand.nextInt(2);
 				final OrderMessage orderMessage = (platform == 0 ? OrderMessage.createTbaoMessage()
 						: OrderMessage.createTmallMessage());

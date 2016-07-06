@@ -17,14 +17,14 @@ public class RaceConfig implements Serializable {
     public static String MqPayTopic = "MiddlewareRaceTestData_Pay";
     public static String MqTmallTradeTopic = "MiddlewareRaceTestData_TBOrder";
     public static String MqTaobaoTradeTopic = "MiddlewareRaceTestData_TMOrder";
-    //public static String TairConfigServer = "10.101.72.127:5198";
-   // public static String TairSalveConfigServer = "10.101.72.128:5198";
+    public static String TairConfigServer = "10.101.72.127:5198";
+    public static String TairSalveConfigServer = "10.101.72.128:5198";
     
-    public static String TairConfigServer = "192.168.159.130:5198";
-    public static String TairSalveConfigServer = "192.168.159.130:5198";
+    //public static String TairConfigServer = "192.168.159.130:5198";
+   // public static String TairSalveConfigServer = "192.168.159.130:5198";
     
-   // public static String TairGroup = "group_tianchi";
-    public static String TairGroup = "group_1";
+    public static String TairGroup = "group_tianchi";
+   // public static String TairGroup = "group_1";
     public static Integer TairNamespace = 0;
     public static final String TB_flag="tb";
     public static final String TM_flag="tm";

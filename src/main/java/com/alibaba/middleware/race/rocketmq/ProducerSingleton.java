@@ -31,7 +31,7 @@ public class ProducerSingleton {
 
 	private ProducerSingleton() {
 		DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
-		consumer.setNamesrvAddr("192.168.159.130:9876");
+		//consumer.setNamesrvAddr("192.168.159.130:9876");
 		try {
 			consumer.subscribe(RaceConfig.MqPayTopic, "*");
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");

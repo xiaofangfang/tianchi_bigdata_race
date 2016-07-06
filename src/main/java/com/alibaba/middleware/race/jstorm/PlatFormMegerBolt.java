@@ -50,9 +50,11 @@ public class PlatFormMegerBolt implements IRichBolt {
 			Utils.sleep(20);
 			return;
 		}
+
 		synchronized (paysMap) {
 			// _tmp 已处理的数据
 			PlatFromCount _tmp = paysMap.get(plat.getPlatFrom());
+			// RaceUtils.method1_WriteText("-----------recev------plat---=="+plat+":"+_tmp);
 			if (_tmp == null) {
 				paysMap.put(plat.getPlatFrom(), plat);
 				return;
@@ -73,11 +75,12 @@ public class PlatFormMegerBolt implements IRichBolt {
 					}
 				}
 				if (currentStamp > lastStamp) {
+					short s1 = 1;
+					short s0 = 0;
+					PlatFromCount p0 = paysMap.get(s0);
+					PlatFromCount p1 = paysMap.get(s1);
 
-					PlatFromCount p0 = paysMap.get(0);
-					PlatFromCount p1 = paysMap.get(1);
-
-					if (p0 != null && p1 != null && _tmp.getPlatFrom() == 0) {
+					if (p0 != null && p1 != null && _tmp.getPlatFrom() == s0) {
 
 						double v = 0;
 						if (p0.getLastStmap() == p1.getLastStmap())
@@ -85,10 +88,14 @@ public class PlatFormMegerBolt implements IRichBolt {
 						if (p0.getLastStmap() == p1.getMiddleStamp())
 							v = p1.getMiddleTotalPrice() / p0.getLastTotalPrice();
 						v = (double) (Math.round(v * 100)) / 100;
-						if (!writeData(_tmp.getLastStmap() / 1000, v))
-							LOG.error("----insert key value fail--" + _tmp.getLastStmap() / 1000 + ":" + v);
+						if (v != 0) {
+							//RaceUtils.method1_WriteText(0 + "-----------recev------p" + p0 + "--" + p1 + ":v=" + v);
+							if (!writeData(_tmp.getLastStmap() / 1000, v))
+								LOG.error(0 + "----insert key value fail--" + _tmp.getLastStmap() / 1000 + ":" + v);
+						}
+					}
+					if (p0 != null && p1 != null && _tmp.getPlatFrom() == s1) {
 
-					} else {
 						if (p0 != null && p1 != null) {
 							double v = 0;
 							if (p1.getLastStmap() == p0.getLastStmap())
@@ -96,8 +103,11 @@ public class PlatFormMegerBolt implements IRichBolt {
 							if (p1.getLastStmap() == p0.getMiddleStamp())
 								v = p1.getLastTotalPrice() / p0.getMiddleTotalPrice();
 							v = (double) (Math.round(v * 100)) / 100;
-							if (!writeData(_tmp.getLastStmap() / 1000, v))
-								LOG.error("----insert key value fail--" + _tmp.getLastStmap() / 1000 + ":" + v);
+							if (v != 0) {
+								//RaceUtils.method1_WriteText(1 + "-----------recev------" + p0 + "--" + p1 + ":v=" + v);
+								if (!writeData(_tmp.getLastStmap() / 1000, v))
+									LOG.error("----insert key value fail--" + _tmp.getLastStmap() / 1000 + ":" + v);
+							}
 						}
 
 					}

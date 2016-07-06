@@ -62,6 +62,7 @@ public class RaceUtils {
         Output output = new Output(1024);
         Kryo kryo = new Kryo();
         kryo.writeObject(output, object);
+        
         output.flush();
         output.close();
         byte [] ret = output.toBytes();

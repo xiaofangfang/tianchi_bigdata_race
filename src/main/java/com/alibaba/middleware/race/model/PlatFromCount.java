@@ -92,7 +92,7 @@ public class PlatFromCount implements Serializable {
 
 	@Override
 	public String toString() {
-		return platFrom + "-" + currentStamp + "-" + middleStamp + "-" + lastStmap + "-" + totalprice + "-" + orderSrc;
+		return platFrom + "-" + currentStamp + "-" + middleStamp + "-" + lastStmap + "-" + totalprice + "-" + orderSrc+"-";
 	}
 
 }
