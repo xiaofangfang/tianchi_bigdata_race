@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.commons.collections.bag.SynchronizedBag;
+//import org.apache.commons.collections.bag.SynchronizedBag;
 
 import com.alibaba.aloha.meta.MetaTuple;
 import com.alibaba.middleware.race.RaceConfig;
