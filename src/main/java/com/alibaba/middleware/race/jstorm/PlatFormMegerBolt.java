@@ -21,7 +21,7 @@ import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.utils.Utils;
-import edu.emory.mathcs.backport.java.util.Collections;
+//import edu.emory.mathcs.backport.java.util.Collections;
 
 public class PlatFormMegerBolt implements IRichBolt {
 	/**
