@@ -1,27 +1,19 @@
 package com.alibaba.middleware.race.jstorm;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.RaceUtils;
-import com.alibaba.middleware.race.Tair.TairOperatorImpl;
-import com.alibaba.middleware.race.model.PlatFromCount;
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import backtype.storm.utils.Utils;
-//import edu.emory.mathcs.backport.java.util.Collections;
+import backtype.storm.tuple.Values;
 
 public class PlatFormMegerBolt implements IRichBolt {
 	/**
@@ -29,117 +21,86 @@ public class PlatFormMegerBolt implements IRichBolt {
 	 */
 	private static final long serialVersionUID = 1557894564564L;
 	OutputCollector collector;
-	Map<String, Double> counts = new HashMap<String, Double>();
-	private static Logger LOG = LoggerFactory.getLogger(PlatFormMegerBolt.class);
-	long _beginStmap;
-	long _endStamp;
-	int countTimes = 0;
-	String _timeStampValue;
-
-	static Map<Short, PlatFromCount> paysMap = new HashMap<Short, PlatFromCount>();
-
-	private transient TairOperatorImpl tairOperator;
-
-	List<PlatFromCount> lists = new ArrayList<PlatFromCount>();
+	Map<Long, String> tp0 = new HashMap<Long, String>();
+	Map<Long, String> tp1 = new HashMap<Long, String>();
+	List<String> tmplist = new ArrayList<String>();
+	private static final String sep = ":";
 
 	@Override
 	public void execute(Tuple tuple) {
-		// plat 要处理的数据
-		PlatFromCount plat = (PlatFromCount) tuple.getValue(0);
-		if (plat == null) {
-			Utils.sleep(20);
+
+		List<String> lists = (List<String>) tuple.getValue(0);
+		if (lists == null)
 			return;
-		}
+		tmplist.clear();
+		tp0.clear();
+		tp1.clear();
+		String[] arr = (String[]) lists.toArray(new String[lists.size()]);
+		if (arr.length == 0)
+			return;
+		for (String str : arr) {
+			if (RaceConfig.pay_end.equals(str)) {
+				tmplist.add(str);
+				// RaceUtils.method1_WriteText("----PlatFormMeger--rev-----" +
+				// str);
+				continue;
+			}
+			String data[] = str.split(sep);
+			String pt = data[0];
+			String time = data[1];
+			long createtime = (Long.parseLong(time) / 1000) * 1000;
+			Date d = new Date(createtime);
+			long timeStamp = createtime - d.getSeconds() * 1000;
+			timeStamp = timeStamp / 1000;
+			double totalPrice = Double.parseDouble(data[2]);
+			String v0 = tp0.get(timeStamp);
+			String v1 = tp1.get(timeStamp);
+			// 平台相同才可以进行金额的加减
+			if (v0 == null && "0".equals(pt))
+				tp0.put(timeStamp, pt + sep + totalPrice);
+			else if (v1 == null && "1".equals(pt))
+				tp1.put(timeStamp, pt + sep + totalPrice);
+			else {
+				if ("0".equals(pt)) {
+					String values[] = v0.split(sep);
+					double total = totalPrice + Double.parseDouble(values[1]);
+					tp0.put(timeStamp, values[0] + sep + total);
 
-		synchronized (paysMap) {
-			// _tmp 已处理的数据
-			PlatFromCount _tmp = paysMap.get(plat.getPlatFrom());
-			// RaceUtils.method1_WriteText("-----------recev------plat---=="+plat+":"+_tmp);
-			if (_tmp == null) {
-				paysMap.put(plat.getPlatFrom(), plat);
-				return;
-			} else {
-				long currentStamp = plat.getTimeStamp();
-				long lastStamp = _tmp.getTimeStamp();
-				if (lastStamp == currentStamp) {
-					_tmp.setTotalprice(_tmp.getTotalprice() + plat.getTotalprice());
-					_tmp.setLastTotalPrice(_tmp.getLastTotalPrice() + plat.getLastTotalPrice());
-					_tmp.setMiddleTotalPrice(_tmp.getMiddleTotalPrice() + plat.getMiddleTotalPrice());
 				}
-				if (currentStamp < lastStamp) {
-					if (currentStamp == _tmp.getMiddleStamp()) {
-						_tmp.setMiddleTotalPrice(_tmp.getMiddleTotalPrice() + plat.getTotalprice());
-					}
-					if (currentStamp == _tmp.getLastStmap()) {
-						_tmp.setLastTotalPrice(_tmp.getLastTotalPrice() + plat.getTotalprice());
-					}
+				if ("1".equals(pt)) {
+					String values[] = v1.split(sep);
+					double total = totalPrice + Double.parseDouble(values[1]);
+					tp1.put(timeStamp, values[0] + sep + total);
+
 				}
-				if (currentStamp > lastStamp) {
-					short s1 = 1;
-					short s0 = 0;
-					PlatFromCount p0 = paysMap.get(s0);
-					PlatFromCount p1 = paysMap.get(s1);
 
-					if (p0 != null && p1 != null && _tmp.getPlatFrom() == s0) {
-
-						double v = 0;
-						if (p0.getLastStmap() == p1.getLastStmap())
-							v = p1.getLastTotalPrice() / p0.getLastTotalPrice();
-						if (p0.getLastStmap() == p1.getMiddleStamp())
-							v = p1.getMiddleTotalPrice() / p0.getLastTotalPrice();
-						v = (double) (Math.round(v * 100)) / 100;
-						if (v != 0) {
-							//RaceUtils.method1_WriteText(0 + "-----------recev------p" + p0 + "--" + p1 + ":v=" + v);
-							if (!writeData(_tmp.getLastStmap() / 1000, v))
-								LOG.error(0 + "----insert key value fail--" + _tmp.getLastStmap() / 1000 + ":" + v);
-						}
-					}
-					if (p0 != null && p1 != null && _tmp.getPlatFrom() == s1) {
-
-						if (p0 != null && p1 != null) {
-							double v = 0;
-							if (p1.getLastStmap() == p0.getLastStmap())
-								v = p1.getLastTotalPrice() / p0.getLastTotalPrice();
-							if (p1.getLastStmap() == p0.getMiddleStamp())
-								v = p1.getLastTotalPrice() / p0.getMiddleTotalPrice();
-							v = (double) (Math.round(v * 100)) / 100;
-							if (v != 0) {
-								//RaceUtils.method1_WriteText(1 + "-----------recev------" + p0 + "--" + p1 + ":v=" + v);
-								if (!writeData(_tmp.getLastStmap() / 1000, v))
-									LOG.error("----insert key value fail--" + _tmp.getLastStmap() / 1000 + ":" + v);
-							}
-						}
-
-					}
-
-					// 更新時間和金額
-					_tmp.setLastStmap(_tmp.getMiddleStamp());
-					_tmp.setMiddleStamp(_tmp.getTimeStamp());
-					_tmp.setTimeStamp(currentStamp);
-
-					_tmp.setLastTotalPrice(_tmp.getMiddleTotalPrice());
-					_tmp.setMiddleTotalPrice(_tmp.getTotalprice());
-					_tmp.setTotalprice(plat.getTotalprice());
-
-					// RaceUtils.method1_WriteText(str);
-				}
-				paysMap.put(plat.getPlatFrom(), _tmp);
 			}
 
 		}
-		// 消息处理
+
+		for (Long l : tp0.keySet()) {
+			tmplist.add(l + ":" + tp0.get(l));
+		}
+		collector.emit(tuple, new Values(new ArrayList(tmplist)));
+
+		tmplist.clear();
+
+		for (Long l : tp1.keySet()) {
+			tmplist.add(l + ":" + tp1.get(l));
+		}
+		collector.emit(tuple, new Values(new ArrayList(tmplist)));
 		collector.ack(tuple);
 
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		// declarer.declare(new Fields("orderid"));
+		declarer.declare(new Fields("tmplist"));
 	}
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-		tairOperator = new TairOperatorImpl();
+		// tairOperator = new TairOperatorImpl();
 		this.collector = collector;
 
 	}
@@ -156,11 +117,10 @@ public class PlatFormMegerBolt implements IRichBolt {
 		return null;
 	}
 
-	public boolean writeData(long timestamp, Number str) {
-
-		String key = RaceConfig.prex_ratio + RaceConfig.teamcode + timestamp;
-		RaceUtils.method1_WriteText(key + ":" + str);
-		return tairOperator.write(key, str);
-
-	}
+	// public boolean writeData(long timestamp, Number str) {
+	// String key = RaceConfig.prex_ratio + RaceConfig.teamcode + timestamp;
+	// RaceUtils.method1_WriteText(key + ":" + str);
+	// return tairOperator.put(key, str);
+	//
+	// }
 }

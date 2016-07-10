@@ -9,34 +9,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.aloha.meta.MetaTuple;
-import com.alibaba.jstorm.utils.JStormUtils;
-import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.PaymentMessage;
-import com.alibaba.middleware.race.rocketmq.Consumer;
 import com.alibaba.middleware.race.rocketmq.ProducerSingleton;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
-import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
-import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
-import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import com.alibaba.rocketmq.client.exception.MQClientException;
-import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
-import com.alibaba.rocketmq.common.message.MessageExt;
-
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
 
-public class RacePayMentSpout implements IRichSpout {
+public class MetaDataSpout implements IRichSpout {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1564646544646545L;
-	private static Logger LOG = LoggerFactory.getLogger(RacePayMentSpout.class);
+	private static Logger LOG = LoggerFactory.getLogger(MetaDataSpout.class);
 	SpoutOutputCollector _collector;
 	Random _rand;
 	long sendingCount;
@@ -54,20 +42,19 @@ public class RacePayMentSpout implements IRichSpout {
 	protected boolean autoAck = true;
 	private String consumer_PT;
 
-	public RacePayMentSpout() {
+	public MetaDataSpout() {
 
 	}
 
-	public RacePayMentSpout(String consumer_PT) {
+	public MetaDataSpout(String consumer_PT) {
 		this.consumer_PT = consumer_PT;
 	}
 
 	@Override
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		_collector = collector;
-		//sendingQueue = ProducerSingleton.getInstance(consumer_PT);
-		ProducerSingleton p=ProducerSingleton.getInstance();
-		sendingQueue=p.getQues(consumer_PT);
+		ProducerSingleton p = ProducerSingleton.getInstance();
+		sendingQueue = p.getQues(consumer_PT);
 
 	}
 
@@ -76,12 +63,14 @@ public class RacePayMentSpout implements IRichSpout {
 		MetaTuple metaTuple = null;
 		try {
 			metaTuple = sendingQueue.take();
+			//RaceUtils.method1_WriteText("----rev tupe--" + metaTuple + ":" + sendingQueue.size());
 		} catch (InterruptedException e) {
 		}
 		if (metaTuple == null) {
 			return;
 		}
 		sendTuple(metaTuple);
+		
 
 	}
 
@@ -99,7 +88,7 @@ public class RacePayMentSpout implements IRichSpout {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("payment"));
+		declarer.declare(new Fields("consumer"));
 	}
 
 	@Override
@@ -127,7 +116,6 @@ public class RacePayMentSpout implements IRichSpout {
 	}
 
 	public void sendTuple(MetaTuple metaTuple) {
-		metaTuple.updateEmitMs();
 		metaTuple.setConsumer(this.consumer_PT);
 		_collector.emit(new Values(metaTuple));
 

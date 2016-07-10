@@ -6,11 +6,9 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.middleware.race.RaceConfig;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
-import backtype.storm.utils.Utils;
 
 /**
  * 这是一个很简单的例子
@@ -39,32 +37,37 @@ public class RaceTopology {
 		// int count_Parallelism_hint = 1;
 
 		Config conf = new Config();
+		conf.setNumWorkers(2);
 		conf.setDebug(false);
+		//conf.setMaxSpoutPending(1);
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout("tb_spout", new RacePayMentSpout(RaceConfig.MqTaobaoTradeTopic), 1);
-		builder.setSpout("tm_spout", new RacePayMentSpout(RaceConfig.MqTmallTradeTopic), 1);
-		builder.setSpout("pay_spout", new RacePayMentSpout(RaceConfig.MqPayTopic), 1);
+		builder.setSpout("tb_spout", new MetaDataSpout(RaceConfig.MqTaobaoTradeTopic), 1);
+		builder.setSpout("tm_spout", new MetaDataSpout(RaceConfig.MqTmallTradeTopic), 1);
+		builder.setSpout("pay_spout", new MetaDataSpout(RaceConfig.MqPayTopic), 1);
 
-		builder.setBolt("tb_bolt", new OrderIdBolt(), 2).shuffleGrouping("tb_spout");
-		builder.setBolt("tm_bolt", new OrderIdBolt(), 2).shuffleGrouping("tm_spout");
+		builder.setBolt("tb_bolt", new TBOrderIdBolt(), 4).shuffleGrouping("tb_spout");
+		builder.setBolt("tm_bolt", new TMOrderIdBolt(), 4).shuffleGrouping("tm_spout");
 
-		builder.setBolt("py_1", new PayMentBolt(), 2).fieldsGrouping("pay_spout", new Fields("payment"));
-		;
-		builder.setBolt("py_2", new PlatFormMegerBolt(), 1).shuffleGrouping("py_1", RaceConfig.PAY_STREAM_ID);
-		builder.setBolt("py_3", new OrderSourceCountBolt(), 2).shuffleGrouping("tb_bolt").shuffleGrouping("tm_bolt")
-				.shuffleGrouping("py_1", RaceConfig.ORDERID_STREAM_ID);
-		builder.setBolt("count", new CountAllBolt(), 1).fieldsGrouping("py_3", new Fields("orderSource"));
+		builder.setBolt("py_1", new PayMentBolt(), 4).shuffleGrouping("pay_spout");
+		builder.setBolt("py_2", new PlatFormMegerBolt(), 4).shuffleGrouping("py_1", RaceConfig.PAY_STREAM_ID);
+		builder.setBolt("meger2", new PlatFormMeger2(), 2).fieldsGrouping("py_2", new Fields("tmplist"));
+
+		builder.setBolt("count", new PlatFormCountOutBolt(), 1).globalGrouping("meger2");
+
+		builder.setBolt("ordermeger", new OrderMegerBolt(), 2).shuffleGrouping("py_1", RaceConfig.ORDERID_STREAM_ID);
+		builder.setBolt("ordercount", new OrderCountBolt(), 1).globalGrouping("ordermeger");
+
 		String topologyName = RaceConfig.JstormTopologyName;
 
 		try {
-			/// LocalCluster cluster = new LocalCluster();
-
-			// cluster.submitTopology(topologyName, conf,
-			// builder.createTopology());
-			// Utils.sleep(10000000);
-			// cluster.killTopology(topologyName);
-			// cluster.shutdown();
-			StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
+//			LocalCluster cluster = new LocalCluster();
+//
+//			cluster.submitTopology(topologyName, conf, builder.createTopology());
+//			Utils.sleep(10000000);
+//			cluster.killTopology(topologyName);
+//			cluster.shutdown();
+			 StormSubmitter.submitTopology(topologyName, conf,
+			 builder.createTopology());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

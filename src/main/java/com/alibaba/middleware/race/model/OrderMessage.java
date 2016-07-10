@@ -22,6 +22,7 @@ public class OrderMessage implements Serializable{
     private OrderMessage() {
 
     }
+    
 
     public static OrderMessage createTbaoMessage() {
         OrderMessage msg =  new OrderMessage();

@@ -2,13 +2,12 @@ package com.alibaba.middleware.race.model;
 
 import java.io.Serializable;
 import java.util.List;
-
-import clojure.main;
+import java.util.Map;
 
 public class BillCount implements Serializable {
 	private static final long serialVersionUID = 1465454544654654L;
 	private long timeStamp;
-	private List<Long> orderIds;
+	private Map<Long, List<Long>> orderIds;
 	private double totalPrice;
 
 	public BillCount() {
@@ -23,11 +22,11 @@ public class BillCount implements Serializable {
 		this.timeStamp = timeStamp;
 	}
 
-	public List<Long> getOrderIds() {
+	public Map<Long, List<Long>> getOrderIds() {
 		return orderIds;
 	}
 
-	public void setOrderIds(List<Long> orderIds) {
+	public void setOrderIds(Map<Long, List<Long>> orderIds) {
 		this.orderIds = orderIds;
 	}
 

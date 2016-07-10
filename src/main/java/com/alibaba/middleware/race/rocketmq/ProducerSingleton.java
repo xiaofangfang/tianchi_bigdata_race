@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
-//import org.apache.commons.collections.bag.SynchronizedBag;
-
 import com.alibaba.aloha.meta.MetaTuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -31,7 +29,7 @@ public class ProducerSingleton {
 
 	private ProducerSingleton() {
 		DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
-		//consumer.setNamesrvAddr("192.168.159.130:9876");
+		//consumer.setNamesrvAddr("192.168.187.128:9876");
 		try {
 			consumer.subscribe(RaceConfig.MqPayTopic, "*");
 			consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
@@ -40,6 +38,8 @@ public class ProducerSingleton {
 			e.printStackTrace();
 		}
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET);
+		consumer.setConsumeMessageBatchMaxSize(500);
+		consumer.setPullBatchSize(500);
 		consumer.registerMessageListener(new MessageListenerConcurrently() {
 			public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
 				List<MessageExt> tb = new ArrayList<MessageExt>();
@@ -61,14 +61,17 @@ public class ProducerSingleton {
 				if (pay.size() > 0) {
 					metaTuple = new MetaTuple(pay, context.getMessageQueue());
 					sendingQueue_pay.offer(metaTuple);
+					//RaceUtils.method1_WriteText("---pya---"+sendingQueue_pay.size());
 				}
 				if (tb.size() > 0) {
 					metaTuple = new MetaTuple(tb, context.getMessageQueue());
 					sendingQueue_tb.offer(metaTuple);
+					//RaceUtils.method1_WriteText("----tb--"+sendingQueue_tb.size());
 				}
 				if (tm.size() > 0) {
 					metaTuple = new MetaTuple(tm, context.getMessageQueue());
 					sendingQueue_tm.offer(metaTuple);
+					//RaceUtils.method1_WriteText("----tm--"+sendingQueue_tm.size());
 				}
 				return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
 			}

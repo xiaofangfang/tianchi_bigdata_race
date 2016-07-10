@@ -1,6 +1,5 @@
 package com.alibaba.aloha.meta;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -21,16 +20,12 @@ import com.alibaba.jstorm.common.metric.AsmHistogram;
 
 import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.RaceUtils;
-import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
-import com.codahale.metrics.MetricRegistry;
-
 import com.alibaba.jstorm.common.metric.MetricMeta;;
 
 public class MetaSpout implements IRichSpout, IAckValueSpout, IFailValueSpout, MessageListenerConcurrently {

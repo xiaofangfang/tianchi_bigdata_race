@@ -36,7 +36,7 @@ public class Consumer implements MessageListenerConcurrently{
 	public void initConsumer() throws MQClientException {
 		System.out.println("begin to consumer");
 		consumer = new DefaultMQPushConsumer("yuhaifang_916");
-		consumer.setNamesrvAddr("192.168.159.130:9876");
+		consumer.setNamesrvAddr("192.168.187.128:9876");
 		consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*");
 		consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 		consumer.registerMessageListener(new MessageListenerConcurrently() {
